@@ -11,7 +11,6 @@ import {
   ArrowRight,
   Zap,
   Users,
-  TrendingUp,
   Star,
 } from 'lucide-react'
 
