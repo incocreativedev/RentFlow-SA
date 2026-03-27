@@ -3,7 +3,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Select } from '@/components/ui/select'
@@ -72,58 +71,75 @@ export default function Payments() {
     return tenantName.includes(search.toLowerCase()) || (p.reference || '').toLowerCase().includes(search.toLowerCase())
   })
 
-  if (loading) return <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>
+  if (loading) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="text-center">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <p className="mt-4 text-sm text-muted-foreground">Loading payments...</p>
+      </div>
+    </div>
+  )
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search payments..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Payments</h2>
+          <p className="text-sm text-muted-foreground">{payments.length} payments recorded</p>
         </div>
-        <Button onClick={openCreate} disabled={leases.length === 0}>
+        <Button onClick={openCreate} disabled={leases.length === 0} className="shadow-sm">
           <Plus className="mr-2 h-4 w-4" /> Record Payment
         </Button>
       </div>
 
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input placeholder="Search by tenant or reference..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 bg-white" />
+      </div>
+
       {filtered.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <CreditCard className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium">No payments recorded</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              {leases.length === 0 ? 'Create active leases first' : 'Record your first payment'}
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed bg-white py-16">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-50">
+            <CreditCard className="h-8 w-8 text-purple-500" />
+          </div>
+          <p className="mt-4 text-lg font-semibold">No payments recorded</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {leases.length === 0 ? 'Create active leases first' : 'Record your first payment'}
+          </p>
+        </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
+        <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium">Date</th>
-                <th className="px-4 py-3 text-left font-medium">Tenant</th>
-                <th className="px-4 py-3 text-left font-medium">Property</th>
-                <th className="px-4 py-3 text-left font-medium">Amount</th>
-                <th className="px-4 py-3 text-left font-medium">Method</th>
-                <th className="px-4 py-3 text-left font-medium">Period</th>
-                <th className="px-4 py-3 text-left font-medium">Reference</th>
-                <th className="px-4 py-3 text-right font-medium">Actions</th>
+            <thead>
+              <tr className="border-b bg-muted/40">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tenant</th>
+                <th className="hidden px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Property</th>
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Amount</th>
+                <th className="hidden px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:table-cell">Method</th>
+                <th className="hidden px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:table-cell">Period</th>
+                <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {filtered.map(payment => (
-                <tr key={payment.id} className="hover:bg-muted/30">
-                  <td className="px-4 py-3">{formatDate(payment.payment_date)}</td>
-                  <td className="px-4 py-3 font-medium">{payment.lease?.tenant?.first_name} {payment.lease?.tenant?.last_name}</td>
-                  <td className="px-4 py-3">{payment.lease?.property?.address}</td>
-                  <td className="px-4 py-3 font-semibold text-green-600">{formatCurrency(payment.amount)}</td>
-                  <td className="px-4 py-3"><Badge variant="secondary">{payment.payment_method.toUpperCase()}</Badge></td>
-                  <td className="px-4 py-3">{payment.period_month}/{payment.period_year}</td>
-                  <td className="px-4 py-3">{payment.reference || '-'}</td>
-                  <td className="px-4 py-3 text-right">
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(payment.id)}>
-                      <Trash2 className="h-4 w-4" />
+                <tr key={payment.id} className="transition-colors hover:bg-muted/20">
+                  <td className="px-5 py-3.5 text-muted-foreground">{formatDate(payment.payment_date)}</td>
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-600">
+                        {payment.lease?.tenant?.first_name?.[0]}{payment.lease?.tenant?.last_name?.[0]}
+                      </div>
+                      <span className="font-medium">{payment.lease?.tenant?.first_name} {payment.lease?.tenant?.last_name}</span>
+                    </div>
+                  </td>
+                  <td className="hidden px-5 py-3.5 text-muted-foreground md:table-cell">{payment.lease?.property?.address}</td>
+                  <td className="px-5 py-3.5 font-semibold text-green-600">{formatCurrency(payment.amount)}</td>
+                  <td className="hidden px-5 py-3.5 lg:table-cell"><Badge variant="secondary" className="uppercase text-[10px]">{payment.payment_method}</Badge></td>
+                  <td className="hidden px-5 py-3.5 text-muted-foreground lg:table-cell">{payment.period_month}/{payment.period_year}</td>
+                  <td className="px-5 py-3.5 text-right">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-red-50 hover:text-red-600" onClick={() => handleDelete(payment.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </td>
                 </tr>

@@ -3,7 +3,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-background: hsl(0 0% 100%);
+  --color-background: hsl(220 20% 97%);
   --color-foreground: hsl(222.2 84% 4.9%);
   --color-card: hsl(0 0% 100%);
   --color-card-foreground: hsl(222.2 84% 4.9%);
@@ -29,14 +29,14 @@
   --color-chart-3: hsl(38 92% 50%);
   --color-chart-4: hsl(280 65% 60%);
   --color-chart-5: hsl(340 75% 55%);
-  --color-sidebar-background: hsl(0 0% 98%);
-  --color-sidebar-foreground: hsl(240 5.3% 26.1%);
-  --color-sidebar-primary: hsl(221.2 83.2% 53.3%);
+  --color-sidebar-background: hsl(224 40% 12%);
+  --color-sidebar-foreground: hsl(220 20% 75%);
+  --color-sidebar-primary: hsl(221.2 83.2% 60%);
   --color-sidebar-primary-foreground: hsl(0 0% 100%);
-  --color-sidebar-accent: hsl(240 4.8% 95.9%);
-  --color-sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --color-sidebar-border: hsl(220 13% 91%);
-  --radius-lg: 0.5rem;
+  --color-sidebar-accent: hsl(224 35% 18%);
+  --color-sidebar-accent-foreground: hsl(0 0% 100%);
+  --color-sidebar-border: hsl(224 30% 20%);
+  --radius-lg: 0.75rem;
   --radius-md: calc(var(--radius-lg) - 2px);
   --radius-sm: calc(var(--radius-md) - 2px);
 }
@@ -48,6 +48,44 @@
   body {
     @apply bg-background text-foreground antialiased;
     margin: 0;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(215.4 16.3% 80%);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(215.4 16.3% 66.9%);
+}
+
+/* Smooth transitions */
+.sidebar-nav-item {
+  transition: all 0.15s ease;
+}
+
+/* Gradient backgrounds for stats cards */
+.gradient-blue {
+  background: linear-gradient(135deg, hsl(221.2 83.2% 53.3%) 0%, hsl(240 80% 60%) 100%);
+}
+.gradient-green {
+  background: linear-gradient(135deg, hsl(142.1 76.2% 36.3%) 0%, hsl(160 70% 40%) 100%);
+}
+.gradient-amber {
+  background: linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(25 95% 53%) 100%);
+}
+.gradient-red {
+  background: linear-gradient(135deg, hsl(0 84.2% 60.2%) 0%, hsl(340 75% 55%) 100%);
+}
+.gradient-purple {
+  background: linear-gradient(135deg, hsl(280 65% 60%) 0%, hsl(260 70% 50%) 100%);
 }

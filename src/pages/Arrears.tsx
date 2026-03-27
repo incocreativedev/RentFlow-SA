@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   AlertTriangle, Bell, FileWarning, Ban, UserCheck, Clock,
-  CheckCircle, ChevronRight, Send
+  CheckCircle, ChevronRight, Send, ShieldCheck
 } from 'lucide-react'
 import { getActiveLeases } from '@/services/leases'
 import { getPayments } from '@/services/payments'
@@ -22,11 +21,11 @@ interface OverdueLease extends Lease {
 }
 
 const escalationSteps = [
-  { level: 1, action: 'reminder_sent' as const, label: 'Send Reminder', icon: Bell, description: 'Send overdue notification to tenant' },
-  { level: 2, action: 'second_reminder' as const, label: 'Send 2nd Reminder', icon: Send, description: 'Follow up with another reminder' },
-  { level: 3, action: 'letter_of_demand' as const, label: 'Issue Letter of Demand', icon: FileWarning, description: 'Formal letter of demand to tenant' },
-  { level: 4, action: 'termination_notice' as const, label: 'Termination Notice', icon: Ban, description: 'Issue lease termination notice' },
-  { level: 5, action: 'agent_notified' as const, label: 'Notify Agent', icon: UserCheck, description: 'Escalate to agent for manual intervention' },
+  { level: 1, action: 'reminder_sent' as const, label: 'Send Reminder', icon: Bell, description: 'Send overdue notification to tenant', color: 'text-yellow-600 bg-yellow-100' },
+  { level: 2, action: 'second_reminder' as const, label: 'Send 2nd Reminder', icon: Send, description: 'Follow up with another reminder', color: 'text-orange-600 bg-orange-100' },
+  { level: 3, action: 'letter_of_demand' as const, label: 'Issue Letter of Demand', icon: FileWarning, description: 'Formal letter of demand to tenant', color: 'text-red-600 bg-red-100' },
+  { level: 4, action: 'termination_notice' as const, label: 'Termination Notice', icon: Ban, description: 'Issue lease termination notice', color: 'text-red-700 bg-red-100' },
+  { level: 5, action: 'agent_notified' as const, label: 'Notify Agent', icon: UserCheck, description: 'Escalate to agent for manual intervention', color: 'text-purple-600 bg-purple-100' },
 ]
 
 export default function Arrears() {
@@ -45,14 +44,12 @@ export default function Arrears() {
       const currentMonth = now.getMonth() + 1
       const currentYear = now.getFullYear()
 
-      // Find which leases have been paid this month
       const paidLeaseIds = new Set(
         payments
           .filter((p: Payment) => p.period_month === currentMonth && p.period_year === currentYear)
           .map((p: Payment) => p.lease_id)
       )
 
-      // Find overdue leases and load their escalations
       const overdue: OverdueLease[] = []
       for (const lease of leases) {
         const dueDate = new Date(currentYear, now.getMonth(), lease.rent_due_day)
@@ -80,7 +77,6 @@ export default function Arrears() {
     if (!user) return
     setProcessing(true)
     try {
-      // Create escalation record
       await createEscalation({
         user_id: user.id,
         lease_id: lease.id,
@@ -92,7 +88,6 @@ export default function Arrears() {
         resolved_at: null,
       })
 
-      // Create tenant notification
       await createNotification({
         user_id: user.id,
         lease_id: lease.id,
@@ -106,7 +101,6 @@ export default function Arrears() {
         status: 'sent',
       })
 
-      // Create owner notification
       if (lease.property?.owner_name) {
         await createNotification({
           user_id: user.id,
@@ -121,7 +115,6 @@ export default function Arrears() {
       }
 
       await loadArrears()
-      // Refresh selected lease
       const updated = overdueLeases.find(l => l.id === lease.id)
       if (updated) setSelectedLease(updated)
     } catch (err) { console.error(err) }
@@ -136,57 +129,76 @@ export default function Arrears() {
     return null
   }
 
-  if (loading) return <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>
+  if (loading) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="text-center">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <p className="mt-4 text-sm text-muted-foreground">Loading arrears...</p>
+      </div>
+    </div>
+  )
 
   return (
     <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Arrears Management</h2>
+        <p className="text-sm text-muted-foreground">Track and escalate overdue rent payments</p>
+      </div>
+
       {overdueLeases.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
-            <p className="text-lg font-medium">No Arrears</p>
-            <p className="text-sm text-muted-foreground">All tenants are up to date with their rent!</p>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed bg-white py-16">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+            <ShieldCheck className="h-8 w-8 text-green-500" />
+          </div>
+          <p className="mt-4 text-lg font-semibold text-green-700">No Arrears</p>
+          <p className="mt-1 text-sm text-muted-foreground">All tenants are up to date with their rent!</p>
+        </div>
       ) : (
         <div className="space-y-4">
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              <span className="font-semibold text-destructive">
-                {overdueLeases.length} lease{overdueLeases.length > 1 ? 's' : ''} with outstanding arrears
-              </span>
+          {/* Summary banner */}
+          <div className="flex items-center gap-4 rounded-xl bg-gradient-to-r from-red-500 to-red-600 p-5 text-white shadow-lg">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20">
+              <AlertTriangle className="h-6 w-6" />
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Total outstanding: {formatCurrency(overdueLeases.reduce((sum, l) => sum + l.monthly_rent, 0))}
-            </p>
+            <div>
+              <p className="text-lg font-bold">
+                {overdueLeases.length} lease{overdueLeases.length > 1 ? 's' : ''} with outstanding arrears
+              </p>
+              <p className="text-sm text-red-100">
+                Total outstanding: {formatCurrency(overdueLeases.reduce((sum, l) => sum + l.monthly_rent, 0))}
+              </p>
+            </div>
           </div>
 
           {overdueLeases.map(lease => (
-            <Card key={lease.id} className="border-l-4 border-l-destructive">
-              <CardContent className="p-4">
+            <div key={lease.id} className="overflow-hidden rounded-xl border bg-white shadow-sm transition-all hover:shadow-md">
+              <div className="border-l-4 border-l-red-500 p-5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold">{lease.tenant?.first_name} {lease.tenant?.last_name}</h3>
-                      {getEscalationBadge(lease.currentLevel)}
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-100 text-sm font-bold text-red-600">
+                      {lease.tenant?.first_name?.[0]}{lease.tenant?.last_name?.[0]}
                     </div>
-                    <p className="text-sm text-muted-foreground">{lease.property?.address}</p>
-                    <div className="mt-2 flex flex-wrap gap-4 text-sm">
-                      <span>Rent: <strong>{formatCurrency(lease.monthly_rent)}</strong></span>
-                      <span className="text-destructive font-medium">
-                        <Clock className="inline h-3 w-3 mr-1" />
-                        {lease.daysOverdue} days overdue
-                      </span>
-                      <span>Owner: {lease.property?.owner_name}</span>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold">{lease.tenant?.first_name} {lease.tenant?.last_name}</h3>
+                        {getEscalationBadge(lease.currentLevel)}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{lease.property?.address}</p>
+                      <div className="mt-1.5 flex flex-wrap gap-4 text-sm">
+                        <span>Rent: <strong>{formatCurrency(lease.monthly_rent)}</strong></span>
+                        <span className="text-red-600 font-medium">
+                          <Clock className="inline h-3 w-3 mr-1" />
+                          {lease.daysOverdue} days overdue
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <Button onClick={() => setSelectedLease(lease)} variant="outline" size="sm">
+                  <Button onClick={() => setSelectedLease(lease)} className="shadow-sm">
                     Manage <ChevronRight className="ml-1 h-4 w-4" />
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -196,50 +208,53 @@ export default function Arrears() {
         <DialogContent onClose={() => setSelectedLease(null)} className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              Escalation Workflow - {selectedLease?.tenant?.first_name} {selectedLease?.tenant?.last_name}
+              Escalation Workflow
             </DialogTitle>
           </DialogHeader>
 
           {selectedLease && (
             <div className="space-y-6">
               {/* Lease Info */}
-              <div className="rounded-lg bg-muted/50 p-4 space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Property</span>
-                  <span>{selectedLease.property?.address}</span>
+              <div className="rounded-xl bg-muted/50 p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-sm font-bold text-red-600">
+                    {selectedLease.tenant?.first_name?.[0]}{selectedLease.tenant?.last_name?.[0]}
+                  </div>
+                  <div>
+                    <p className="font-semibold">{selectedLease.tenant?.first_name} {selectedLease.tenant?.last_name}</p>
+                    <p className="text-sm text-muted-foreground">{selectedLease.property?.address}</p>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Monthly Rent</span>
-                  <span className="font-semibold">{formatCurrency(selectedLease.monthly_rent)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Days Overdue</span>
-                  <span className="text-destructive font-semibold">{selectedLease.daysOverdue} days</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Owner</span>
-                  <span>{selectedLease.property?.owner_name}</span>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-lg bg-white p-2.5 text-center">
+                    <p className="text-muted-foreground text-xs">Monthly Rent</p>
+                    <p className="font-bold">{formatCurrency(selectedLease.monthly_rent)}</p>
+                  </div>
+                  <div className="rounded-lg bg-white p-2.5 text-center">
+                    <p className="text-muted-foreground text-xs">Days Overdue</p>
+                    <p className="font-bold text-red-600">{selectedLease.daysOverdue} days</p>
+                  </div>
                 </div>
               </div>
 
               {/* Escalation Steps */}
               <div>
-                <h4 className="font-medium mb-3">Actions</h4>
-                <div className="space-y-3">
+                <h4 className="font-semibold mb-3">Escalation Steps</h4>
+                <div className="space-y-2">
                   {escalationSteps.map(step => {
                     const completed = selectedLease.escalations.some(e => e.level === step.level)
                     const isNext = step.level === selectedLease.currentLevel + 1
                     return (
                       <div
                         key={step.level}
-                        className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
-                          completed ? 'bg-muted/50 border-green-200' :
-                          isNext ? 'border-primary bg-primary/5' : 'opacity-60'
+                        className={`flex items-center gap-3 rounded-xl border p-3.5 transition-all ${
+                          completed ? 'bg-green-50/50 border-green-200' :
+                          isNext ? 'border-blue-200 bg-blue-50/50 shadow-sm' : 'opacity-50'
                         }`}
                       >
-                        <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
                           completed ? 'bg-green-100 text-green-600' :
-                          isNext ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                          isNext ? step.color : 'bg-muted text-muted-foreground'
                         }`}>
                           {completed ? <CheckCircle className="h-4 w-4" /> : <step.icon className="h-4 w-4" />}
                         </div>
@@ -254,6 +269,7 @@ export default function Arrears() {
                             size="sm"
                             onClick={() => handleEscalate(selectedLease, step)}
                             disabled={processing}
+                            className="shadow-sm"
                           >
                             {processing ? 'Processing...' : 'Execute'}
                           </Button>
@@ -267,17 +283,18 @@ export default function Arrears() {
               {/* Escalation History */}
               {selectedLease.escalations.length > 0 && (
                 <div>
-                  <h4 className="font-medium mb-3">History</h4>
+                  <h4 className="font-semibold mb-3">Audit Trail</h4>
                   <div className="space-y-2">
                     {selectedLease.escalations.map(esc => (
-                      <div key={esc.id} className="flex items-center justify-between rounded border p-2 text-sm">
-                        <div>
+                      <div key={esc.id} className="flex items-center justify-between rounded-lg border bg-muted/20 p-3 text-sm">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-green-500" />
                           <span className="font-medium">Level {esc.level}: </span>
-                          <span className="capitalize">{esc.action_type.replace(/_/g, ' ')}</span>
+                          <span className="capitalize text-muted-foreground">{esc.action_type.replace(/_/g, ' ')}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">{formatDate(esc.created_at)}</span>
-                          {esc.owner_notified && <Badge variant="outline" className="text-xs">Owner Notified</Badge>}
+                          {esc.owner_notified && <Badge variant="outline" className="text-[10px]">Owner Notified</Badge>}
                         </div>
                       </div>
                     ))}

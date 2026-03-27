@@ -3,12 +3,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { Plus, Search, Pencil, Trash2, Building } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Building, MapPin, User, Home } from 'lucide-react'
 import { getProperties, createProperty, updateProperty, deleteProperty } from '@/services/properties'
 import type { Property } from '@/lib/database.types'
 import { formatCurrency } from '@/lib/utils'
@@ -21,6 +20,15 @@ const emptyForm: {
   address: '', suburb: '', city: 'Durban', province: 'KwaZulu-Natal',
   property_type: 'apartment', monthly_rent: 0, owner_name: '',
   owner_email: '', owner_phone: '', notes: '', is_active: true,
+}
+
+const typeIcons: Record<string, string> = {
+  apartment: '🏢',
+  house: '🏠',
+  townhouse: '🏘️',
+  flat: '🏬',
+  commercial: '🏪',
+  other: '🏗️',
 }
 
 export default function Properties() {
@@ -92,65 +100,98 @@ export default function Properties() {
     (p.suburb || '').toLowerCase().includes(search.toLowerCase())
   )
 
-  if (loading) return <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>
+  if (loading) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="text-center">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <p className="mt-4 text-sm text-muted-foreground">Loading properties...</p>
+      </div>
+    </div>
+  )
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search properties..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Properties</h2>
+          <p className="text-sm text-muted-foreground">{properties.length} total properties in your portfolio</p>
         </div>
-        <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Add Property</Button>
+        <Button onClick={openCreate} className="shadow-sm">
+          <Plus className="mr-2 h-4 w-4" /> Add Property
+        </Button>
+      </div>
+
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input placeholder="Search by address, suburb, or owner..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 bg-white" />
       </div>
 
       {filtered.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Building className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium">No properties yet</p>
-            <p className="text-sm text-muted-foreground mb-4">Add your first property to get started</p>
-            <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Add Property</Button>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed bg-white py-16">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
+            <Building className="h-8 w-8 text-blue-500" />
+          </div>
+          <p className="mt-4 text-lg font-semibold">No properties yet</p>
+          <p className="mt-1 text-sm text-muted-foreground">Add your first property to get started</p>
+          <Button onClick={openCreate} className="mt-4">
+            <Plus className="mr-2 h-4 w-4" /> Add Property
+          </Button>
+        </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map(property => (
-            <Card key={property.id}>
-              <CardHeader className="flex flex-row items-start justify-between pb-2">
-                <div>
-                  <CardTitle className="text-base">{property.address}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{property.suburb}{property.suburb ? ', ' : ''}{property.city}</p>
+            <div key={property.id} className="group overflow-hidden rounded-xl border bg-white shadow-sm transition-all hover:shadow-md">
+              {/* Card header with type */}
+              <div className="flex items-center justify-between border-b bg-muted/30 px-5 py-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{typeIcons[property.property_type] || '🏗️'}</span>
+                  <span className="text-sm font-medium capitalize text-muted-foreground">{property.property_type}</span>
                 </div>
-                <Badge variant={property.is_active ? 'success' : 'secondary'}>
+                <Badge variant={property.is_active ? 'success' : 'secondary'} className="text-xs">
                   {property.is_active ? 'Active' : 'Inactive'}
                 </Badge>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Type</span>
-                    <span className="capitalize">{property.property_type}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Monthly Rent</span>
-                    <span className="font-semibold">{formatCurrency(property.monthly_rent)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Owner</span>
-                    <span>{property.owner_name}</span>
-                  </div>
+              </div>
+
+              {/* Card body */}
+              <div className="p-5">
+                <h3 className="font-semibold text-foreground">{property.address}</h3>
+                {(property.suburb || property.city) && (
+                  <p className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground">
+                    <MapPin className="h-3 w-3" />
+                    {property.suburb}{property.suburb ? ', ' : ''}{property.city}
+                  </p>
+                )}
+
+                <div className="mt-4 flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2">
+                  <span className="text-sm text-muted-foreground">Monthly Rent</span>
+                  <span className="text-lg font-bold text-foreground">{formatCurrency(property.monthly_rent)}</span>
                 </div>
-                <div className="mt-4 flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => openEdit(property)}>
-                    <Pencil className="mr-1 h-3 w-3" /> Edit
-                  </Button>
-                  <Button variant="outline" size="sm" className="text-destructive" onClick={() => handleDelete(property.id)}>
-                    <Trash2 className="mr-1 h-3 w-3" /> Delete
-                  </Button>
+
+                <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="h-3.5 w-3.5" />
+                  <span>Owner: <span className="font-medium text-foreground">{property.owner_name}</span></span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+
+              {/* Card actions */}
+              <div className="flex border-t">
+                <button
+                  onClick={() => openEdit(property)}
+                  className="flex flex-1 items-center justify-center gap-2 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-blue-50 hover:text-blue-600"
+                >
+                  <Pencil className="h-3.5 w-3.5" /> Edit
+                </button>
+                <div className="w-px bg-border" />
+                <button
+                  onClick={() => handleDelete(property.id)}
+                  className="flex flex-1 items-center justify-center gap-2 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Delete
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -164,12 +205,12 @@ export default function Properties() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label>Address *</Label>
-              <Input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} required />
+              <Input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} required placeholder="e.g. 12 Main Street" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Suburb</Label>
-                <Input value={form.suburb} onChange={e => setForm({ ...form, suburb: e.target.value })} />
+                <Input value={form.suburb} onChange={e => setForm({ ...form, suburb: e.target.value })} placeholder="e.g. Umhlanga" />
               </div>
               <div className="space-y-2">
                 <Label>City</Label>
@@ -213,7 +254,7 @@ export default function Properties() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</Button>
+              <Button type="submit" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update Property' : 'Add Property'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

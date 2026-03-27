@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { Plus, Search, Pencil, Trash2, Users } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Users, Mail, Phone, IdCard } from 'lucide-react'
 import { getTenants, createTenant, updateTenant, deleteTenant } from '@/services/tenants'
 import type { Tenant } from '@/lib/database.types'
 
@@ -67,50 +67,105 @@ export default function Tenants() {
     (t.email || '').toLowerCase().includes(search.toLowerCase())
   )
 
-  if (loading) return <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>
+  if (loading) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="text-center">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <p className="mt-4 text-sm text-muted-foreground">Loading tenants...</p>
+      </div>
+    </div>
+  )
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search tenants..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Tenants</h2>
+          <p className="text-sm text-muted-foreground">{tenants.length} tenants registered</p>
         </div>
-        <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Add Tenant</Button>
+        <Button onClick={openCreate} className="shadow-sm">
+          <Plus className="mr-2 h-4 w-4" /> Add Tenant
+        </Button>
+      </div>
+
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input placeholder="Search by name, phone, or email..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 bg-white" />
       </div>
 
       {filtered.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Users className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium">No tenants yet</p>
-            <p className="text-sm text-muted-foreground mb-4">Add your first tenant to get started</p>
-            <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Add Tenant</Button>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed bg-white py-16">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50">
+            <Users className="h-8 w-8 text-green-500" />
+          </div>
+          <p className="mt-4 text-lg font-semibold">No tenants yet</p>
+          <p className="mt-1 text-sm text-muted-foreground">Add your first tenant to get started</p>
+          <Button onClick={openCreate} className="mt-4">
+            <Plus className="mr-2 h-4 w-4" /> Add Tenant
+          </Button>
+        </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
+        <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium">Name</th>
-                <th className="px-4 py-3 text-left font-medium">Phone</th>
-                <th className="px-4 py-3 text-left font-medium">Email</th>
-                <th className="px-4 py-3 text-left font-medium">ID Number</th>
-                <th className="px-4 py-3 text-right font-medium">Actions</th>
+            <thead>
+              <tr className="border-b bg-muted/40">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tenant</th>
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Phone</th>
+                <th className="hidden px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Email</th>
+                <th className="hidden px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:table-cell">ID Number</th>
+                <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {filtered.map(tenant => (
-                <tr key={tenant.id} className="hover:bg-muted/30">
-                  <td className="px-4 py-3 font-medium">{tenant.first_name} {tenant.last_name}</td>
-                  <td className="px-4 py-3">{tenant.phone}</td>
-                  <td className="px-4 py-3">{tenant.email || '-'}</td>
-                  <td className="px-4 py-3">{tenant.id_number || '-'}</td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(tenant)}><Pencil className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(tenant.id)}><Trash2 className="h-4 w-4" /></Button>
+                <tr key={tenant.id} className="transition-colors hover:bg-muted/20">
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-xs font-bold text-white">
+                        {tenant.first_name[0]}{tenant.last_name[0]}
+                      </div>
+                      <div>
+                        <p className="font-medium">{tenant.first_name} {tenant.last_name}</p>
+                        {tenant.notes && <p className="text-xs text-muted-foreground truncate max-w-[200px]">{tenant.notes}</p>}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Phone className="h-3.5 w-3.5" />
+                      {tenant.phone}
+                    </div>
+                  </td>
+                  <td className="hidden px-5 py-3.5 md:table-cell">
+                    {tenant.email ? (
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <Mail className="h-3.5 w-3.5" />
+                        {tenant.email}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground/50">-</span>
+                    )}
+                  </td>
+                  <td className="hidden px-5 py-3.5 lg:table-cell">
+                    {tenant.id_number ? (
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <IdCard className="h-3.5 w-3.5" />
+                        {tenant.id_number}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground/50">-</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3.5 text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600" onClick={() => openEdit(tenant)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-red-50 hover:text-red-600" onClick={() => handleDelete(tenant.id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -152,7 +207,7 @@ export default function Tenants() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</Button>
+              <Button type="submit" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update Tenant' : 'Add Tenant'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
