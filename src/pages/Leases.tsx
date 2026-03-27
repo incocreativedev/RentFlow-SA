@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-// import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,7 +20,7 @@ const statusColors: Record<string, BadgeVariant> = {
 type BadgeVariant = 'success' | 'secondary' | 'destructive' | 'warning'
 
 export default function Leases() {
-  const user = { id: 'demo' }
+  const { user } = useAuth()
   const [leases, setLeases] = useState<Lease[]>([])
   const [properties, setProperties] = useState<Property[]>([])
   const [tenants, setTenants] = useState<Tenant[]>([])

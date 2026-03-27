@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-// import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,7 +24,7 @@ const emptyForm: {
 }
 
 export default function Properties() {
-  const user = { id: 'demo' }
+  const { user } = useAuth()
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')

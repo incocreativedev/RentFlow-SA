@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { Link, useLocation, Outlet } from 'react-router-dom'
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import {
   LayoutDashboard,
   Building,
@@ -9,6 +11,7 @@ import {
   CreditCard,
   AlertTriangle,
   Bell,
+  LogOut,
   Menu,
   X,
   Building2,
@@ -26,7 +29,14 @@ const navItems = [
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { profile, signOut } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
+
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/')
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -78,10 +88,14 @@ export default function Layout() {
 
         {/* User info */}
         <div className="border-t p-4">
-          <div className="px-3">
-            <p className="text-sm font-medium text-sidebar-foreground">Demo User</p>
-            <p className="text-xs text-muted-foreground">RentFlow SA</p>
+          <div className="mb-3 px-3">
+            <p className="text-sm font-medium text-sidebar-foreground">{profile?.contact_name || 'User'}</p>
+            <p className="text-xs text-muted-foreground">{profile?.agency_name || 'Agency'}</p>
           </div>
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={handleSignOut}>
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
         </div>
       </aside>
 

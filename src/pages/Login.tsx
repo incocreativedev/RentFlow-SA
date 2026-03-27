@@ -22,7 +22,7 @@ export default function Login() {
     setLoading(true)
     try {
       await signIn(email, password)
-      navigate('/')
+      navigate('/app')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign in')
     } finally {

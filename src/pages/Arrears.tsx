@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-// import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -30,7 +30,7 @@ const escalationSteps = [
 ]
 
 export default function Arrears() {
-  const user = { id: 'demo' }
+  const { user } = useAuth()
   const [overdueLeases, setOverdueLeases] = useState<OverdueLease[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedLease, setSelectedLease] = useState<OverdueLease | null>(null)

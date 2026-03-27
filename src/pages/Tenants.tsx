@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-// import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,7 +13,7 @@ import type { Tenant } from '@/lib/database.types'
 const emptyForm = { first_name: '', last_name: '', email: '', phone: '', id_number: '', notes: '' }
 
 export default function Tenants() {
-  const user = { id: 'demo' }
+  const { user } = useAuth()
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')

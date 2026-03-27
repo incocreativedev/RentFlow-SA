@@ -181,13 +181,13 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-3">
             <Link
-              to="/app"
+              to="/login"
               className="text-sm font-medium text-gray-700 transition-colors hover:text-gray-900"
             >
               Sign In
             </Link>
             <Link
-              to="/app"
+              to="/register"
               className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md"
             >
               Get Started Free
@@ -229,7 +229,7 @@ export default function Landing() {
 
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
-                to="/app"
+                to="/register"
                 className="group inline-flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/30"
               >
                 Start 2-Month Free Trial
@@ -518,7 +518,7 @@ export default function Landing() {
                   <span className="text-sm text-gray-500">{plan.period}</span>
                 </div>
                 <Link
-                  to="/app"
+                  to="/register"
                   className={`mt-6 block w-full rounded-lg py-3 text-center text-sm font-semibold transition-all ${
                     plan.popular
                       ? 'bg-blue-600 text-white shadow-sm hover:bg-blue-700'
@@ -554,7 +554,7 @@ export default function Landing() {
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
-                to="/app"
+                to="/register"
                 className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-3.5 text-base font-semibold text-blue-600 shadow-lg transition-all hover:bg-blue-50"
               >
                 Start Your Free Trial
